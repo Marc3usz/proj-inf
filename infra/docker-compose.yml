@@ -1,0 +1,107 @@
+# Docker Compose convention for TrackFlow v1.
+# The application code and Dockerfiles are created during implementation.
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://trackflow:trackflow@postgres:5432/trackflow
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://trackflow:trackflow@rabbitmq:5672
+      JWT_SECRET: change-me-in-prod
+      IP_HASH_SALT: change-me-in-prod
+      PUBLIC_SHORT_URL_BASE: http://localhost:3000
+      APP_BASE_URL: http://localhost:5173
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+
+  worker:
+    build:
+      context: ..
+      dockerfile: apps/worker/Dockerfile
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://trackflow:trackflow@postgres:5432/trackflow
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://trackflow:trackflow@rabbitmq:5672
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      SMTP_USER: ""
+      SMTP_PASSWORD: ""
+      SMTP_FROM: noreply@trackflow.io
+      PDF_STORAGE_PATH: /app/storage/reports
+      GEOIP_PROVIDER: generic
+      GEOIP_API_URL: https://example-geoip-provider.local/lookup
+      GEOIP_API_KEY: ""
+      GEOIP_TIMEOUT_MS: 750
+      IP_HASH_SALT: change-me-in-prod
+      APP_BASE_URL: http://localhost:5173
+      API_BASE_URL: http://localhost:3000
+    volumes:
+      - reports:/app/storage/reports
+    depends_on:
+      - postgres
+      - rabbitmq
+      - mailhog
+
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "5173:4173"
+    environment:
+      NODE_ENV: production
+      PUBLIC_API_BASE_URL: http://localhost:3000
+    depends_on:
+      - api
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: trackflow
+      POSTGRES_USER: trackflow
+      POSTGRES_PASSWORD: trackflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: trackflow
+      RABBITMQ_DEFAULT_PASS: trackflow
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  postgres-data:
+  redis-data:
+  rabbitmq-data:
+  reports:
