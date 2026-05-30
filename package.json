@@ -1,0 +1,33 @@
+{
+  "name": "trackflow",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm --filter @trackflow/shared build && pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "test:integration": "pnpm --filter @trackflow/e2e test:integration",
+    "build": "pnpm -r build",
+    "dev": "pnpm -r --parallel dev",
+    "deploy": "docker compose -f infra/docker-compose.yml up -d --build",
+    "start": "docker compose -f infra/docker-compose.yml up -d",
+    "stop": "docker compose -f infra/docker-compose.yml down",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "prisma": "^5.22.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "packageManager": "pnpm@9.0.0"
+}

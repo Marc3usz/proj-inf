@@ -1,0 +1,230 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Agency {
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String
+  slug      String    @unique
+  timezone  String    @default("Europe/Warsaw")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  users           User[]
+  clients         Client[]
+  campaigns       Campaign[]
+  links           Link[]
+  clicks          Click[]
+  reports         Report[]
+  alertDeliveries AlertDelivery[]
+
+  @@map("agencies")
+}
+
+model User {
+  id           String    @id @default(uuid()) @db.Uuid
+  agencyId     String    @map("agency_id") @db.Uuid
+  clientId     String?   @map("client_id") @db.Uuid
+  email        String
+  passwordHash String    @map("password_hash")
+  role         String
+  name         String?
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  agency          Agency     @relation(fields: [agencyId], references: [id])
+  client          Client?    @relation(fields: [clientId], references: [id])
+  createdCampaign Campaign[] @relation("CampaignCreatedBy")
+  createdLinks    Link[]     @relation("LinkCreatedBy")
+  reports         Report[]   @relation("ReportRequestedBy")
+
+  @@unique([agencyId, email])
+  @@index([agencyId, role])
+  @@map("users")
+}
+
+model Client {
+  id        String    @id @default(uuid()) @db.Uuid
+  agencyId  String    @map("agency_id") @db.Uuid
+  name      String
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  agency    Agency     @relation(fields: [agencyId], references: [id])
+  users     User[]
+  campaigns Campaign[]
+  links     Link[]
+  clicks    Click[]
+  reports   Report[]
+
+  @@index([agencyId, name])
+  @@map("clients")
+}
+
+model Campaign {
+  id        String    @id @default(uuid()) @db.Uuid
+  agencyId  String    @map("agency_id") @db.Uuid
+  clientId  String    @map("client_id") @db.Uuid
+  name      String
+  status    String
+  createdBy String    @map("created_by") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  agency  Agency @relation(fields: [agencyId], references: [id])
+  client  Client @relation(fields: [clientId], references: [id])
+  creator User   @relation("CampaignCreatedBy", fields: [createdBy], references: [id])
+  links   Link[]
+  clicks  Click[]
+
+  @@index([agencyId, clientId, status])
+  @@map("campaigns")
+}
+
+model Link {
+  id            String    @id @default(uuid()) @db.Uuid
+  agencyId      String    @map("agency_id") @db.Uuid
+  clientId      String    @map("client_id") @db.Uuid
+  campaignId    String    @map("campaign_id") @db.Uuid
+  shortCode     String    @unique @map("short_code")
+  originalUrl   String    @map("original_url")
+  status        String
+  createdBy     String    @map("created_by") @db.Uuid
+  expiresAt     DateTime  @map("expires_at") @db.Timestamptz(6)
+  lastClickedAt DateTime? @map("last_clicked_at") @db.Timestamptz(6)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  agency          Agency          @relation(fields: [agencyId], references: [id])
+  client          Client          @relation(fields: [clientId], references: [id])
+  campaign        Campaign        @relation(fields: [campaignId], references: [id])
+  creator         User            @relation("LinkCreatedBy", fields: [createdBy], references: [id])
+  clicks          Click[]
+  alertDeliveries AlertDelivery[]
+
+  @@index([agencyId, clientId, campaignId])
+  @@index([status, expiresAt, deletedAt])
+  @@index([lastClickedAt])
+  @@map("links")
+}
+
+model Click {
+  id              String   @id @default(uuid()) @db.Uuid
+  eventId         String   @unique @map("event_id") @db.Uuid
+  agencyId        String   @map("agency_id") @db.Uuid
+  clientId        String   @map("client_id") @db.Uuid
+  campaignId      String   @map("campaign_id") @db.Uuid
+  linkId          String   @map("link_id") @db.Uuid
+  shortCode       String   @map("short_code")
+  clickedAt       DateTime @map("clicked_at") @db.Timestamptz(6)
+  country         String?
+  region          String?
+  city            String?
+  latitude        Decimal? @db.Decimal(9, 6)
+  longitude       Decimal? @db.Decimal(9, 6)
+  timezone        String?
+  isp             String?
+  asn             String?
+  deviceType      String?  @map("device_type")
+  deviceVendor    String?  @map("device_vendor")
+  deviceModel     String?  @map("device_model")
+  browser         String?
+  browserVersion  String?  @map("browser_version")
+  os              String?
+  osVersion       String?  @map("os_version")
+  engine          String?
+  engineVersion   String?  @map("engine_version")
+  cpuArchitecture String?  @map("cpu_architecture")
+  referrer        String?
+  referrerDomain  String?  @map("referrer_domain")
+  utmSource       String?  @map("utm_source")
+  utmMedium       String?  @map("utm_medium")
+  utmCampaign     String?  @map("utm_campaign")
+  utmTerm         String?  @map("utm_term")
+  utmContent      String?  @map("utm_content")
+  ipHash          String?  @map("ip_hash")
+  userAgentHash   String?  @map("user_agent_hash")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  agency   Agency   @relation(fields: [agencyId], references: [id])
+  client   Client   @relation(fields: [clientId], references: [id])
+  campaign Campaign @relation(fields: [campaignId], references: [id])
+  link     Link     @relation(fields: [linkId], references: [id])
+
+  @@index([linkId, clickedAt])
+  @@index([clientId, clickedAt])
+  @@index([campaignId, clickedAt])
+  @@index([linkId, ipHash, userAgentHash, clickedAt])
+  @@index([country, clickedAt])
+  @@index([deviceType, clickedAt])
+  @@index([browser, clickedAt])
+  @@index([os, clickedAt])
+  @@index([referrerDomain, clickedAt])
+  @@map("clicks")
+}
+
+model Report {
+  id           String    @id @default(uuid()) @db.Uuid
+  agencyId     String    @map("agency_id") @db.Uuid
+  clientId     String    @map("client_id") @db.Uuid
+  requestedBy  String?   @map("requested_by") @db.Uuid
+  type         String
+  status       String
+  dateFrom     DateTime  @map("date_from") @db.Timestamptz(6)
+  dateTo       DateTime  @map("date_to") @db.Timestamptz(6)
+  linkIds      String[]  @map("link_ids") @db.Uuid
+  filePath     String?   @map("file_path")
+  errorMessage String?   @map("error_message")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  completedAt  DateTime? @map("completed_at") @db.Timestamptz(6)
+
+  agency    Agency @relation(fields: [agencyId], references: [id])
+  client    Client @relation(fields: [clientId], references: [id])
+  requester User?  @relation("ReportRequestedBy", fields: [requestedBy], references: [id])
+
+  @@index([agencyId, clientId, createdAt])
+  @@index([status, createdAt])
+  @@map("reports")
+}
+
+model AlertDelivery {
+  id             String   @id @default(uuid()) @db.Uuid
+  agencyId       String   @map("agency_id") @db.Uuid
+  linkId         String   @map("link_id") @db.Uuid
+  alertType      String   @map("alert_type")
+  sentForDate    DateTime @map("sent_for_date") @db.Date
+  recipientEmail String   @map("recipient_email")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  agency Agency @relation(fields: [agencyId], references: [id])
+  link   Link   @relation(fields: [linkId], references: [id])
+
+  @@unique([linkId, alertType, sentForDate, recipientEmail])
+  @@map("alert_deliveries")
+}
+
+model EventOutbox {
+  id        String   @id @default(uuid()) @db.Uuid
+  eventId   String   @unique @map("event_id") @db.Uuid
+  eventType String   @map("event_type")
+  payload   Json
+  status    String   @default("pending")
+  attempts  Int      @default(0)
+  lastError String?  @map("last_error")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([status, createdAt])
+  @@map("event_outbox")
+}

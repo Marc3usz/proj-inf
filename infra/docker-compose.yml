@@ -18,6 +18,8 @@ services:
       IP_HASH_SALT: change-me-in-prod
       PUBLIC_SHORT_URL_BASE: http://localhost:3000
       APP_BASE_URL: http://localhost:5173
+    volumes:
+      - reports:/app/storage/reports
     depends_on:
       - postgres
       - redis
@@ -60,6 +62,7 @@ services:
       - "5173:4173"
     environment:
       NODE_ENV: production
+      PORT: 4173
       PUBLIC_API_BASE_URL: http://localhost:3000
     depends_on:
       - api
