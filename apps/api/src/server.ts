@@ -22,7 +22,18 @@ app.addHook('onRequest', async (request, reply) => {
   if (request.method === 'OPTIONS') return reply.status(204).send();
 });
 
-app.setErrorHandler((error, _request, reply) => {
+app.addHook('onSend', async (request, reply, payload) => {
+  setCorsHeaders(request, reply);
+  return payload;
+});
+
+app.setNotFoundHandler((request, reply) => {
+  setCorsHeaders(request, reply);
+  return reply.status(404).send({ code: 'NOT_FOUND', message: 'Not found' });
+});
+
+app.setErrorHandler((error, request, reply) => {
+  setCorsHeaders(request, reply);
   app.log.error(error);
   if (error instanceof z.ZodError) return reply.status(400).send({ code: 'VALIDATION_ERROR', message: error.errors[0]?.message ?? 'Validation error' });
   return reply.status(500).send({ code: 'INTERNAL_ERROR', message: 'Internal server error' });
