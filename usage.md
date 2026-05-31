@@ -4,8 +4,8 @@ Welcome to the TrackFlow MVP demo! This document is designed to help you and you
 
 ## 🌐 Accessing the Demo
 
-- **Web Dashboard (Frontend):** `https://[YOUR_WEB_DOMAIN]`
-- **API Base URL (For Redirects):** `https://[YOUR_API_DOMAIN]`
+- **Web Dashboard (Frontend):** `https://web-production-8d072.up.railway.app`
+- **API Base URL (For Redirects):** `https://api-production-8246.up.railway.app`
 
 *(Note to deployer: Replace the placeholders above with your actual Railway domains before sharing this guide).*
 
@@ -46,7 +46,7 @@ Here is a step-by-step guide to testing the core functionality of the MVP.
 5. Save. The system will generate a unique short code in the format `XXX-XXX`.
 
 ### 4. Test the High-Speed Redirect
-1. Copy the generated short link (it will look something like `https://[YOUR_API_DOMAIN]/1X2-d4F`).
+1. Copy the generated short link (it will look something like `https://api-production-8246.up.railway.app/1X2-d4F`).
 2. Open a new incognito window or browser tab, and paste the URL.
 3. You will be instantly redirected to the destination URL.
    * *Behind the scenes:* The system hits a Redis cache, drops a message into a RabbitMQ queue for asynchronous analytics processing, and redirects you in under 80 milliseconds.
