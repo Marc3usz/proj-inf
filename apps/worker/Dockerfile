@@ -20,4 +20,4 @@ COPY --from=build /app/apps/worker/dist apps/worker/dist
 COPY --from=build /app/packages/shared/dist packages/shared/dist
 COPY --from=build /app/packages/shared/package.json packages/shared/package.json
 COPY --from=build /app/prisma prisma
-CMD ["sh", "-c", "until npx prisma migrate deploy; do echo 'waiting for postgres'; sleep 2; done && node apps/worker/dist/worker.js"]
+CMD ["node", "apps/worker/dist/worker.js"]

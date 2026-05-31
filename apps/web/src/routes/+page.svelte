@@ -6,7 +6,9 @@
   import Table from './Table.svelte';
   import WorldMap from './WorldMap.svelte';
 
-  const apiBase = import.meta.env.PUBLIC_API_BASE_URL ?? 'http://localhost:3000';
+  export let data: { apiBase: string };
+
+  const apiBase = data.apiBase;
   const views = ['dashboard', 'clients', 'campaigns', 'links', 'stats', 'reports', 'users'] as const;
 
   type View = typeof views[number];
