@@ -14,10 +14,10 @@ services:
       DATABASE_URL: postgresql://trackflow:trackflow@postgres:5432/trackflow
       REDIS_URL: redis://redis:6379
       RABBITMQ_URL: amqp://trackflow:trackflow@rabbitmq:5672
-      JWT_SECRET: change-me-in-prod
-      IP_HASH_SALT: change-me-in-prod
-      PUBLIC_SHORT_URL_BASE: http://localhost:3000
-      APP_BASE_URL: http://localhost:5173
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-prod}
+      IP_HASH_SALT: ${IP_HASH_SALT:-change-me-in-prod}
+      PUBLIC_SHORT_URL_BASE: ${PUBLIC_SHORT_URL_BASE:-http://localhost:3000}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:5173}
     volumes:
       - reports:/app/storage/reports
     depends_on:
@@ -44,9 +44,9 @@ services:
       GEOIP_API_URL: https://example-geoip-provider.local/lookup
       GEOIP_API_KEY: ""
       GEOIP_TIMEOUT_MS: 750
-      IP_HASH_SALT: change-me-in-prod
-      APP_BASE_URL: http://localhost:5173
-      API_BASE_URL: http://localhost:3000
+      IP_HASH_SALT: ${IP_HASH_SALT:-change-me-in-prod}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:5173}
+      API_BASE_URL: ${API_BASE_URL:-http://localhost:3000}
     volumes:
       - reports:/app/storage/reports
     depends_on:
@@ -63,7 +63,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 4173
-      PUBLIC_API_BASE_URL: http://localhost:3000
+      PUBLIC_API_BASE_URL: ${PUBLIC_API_BASE_URL:-http://localhost:3000}
     depends_on:
       - api
 
