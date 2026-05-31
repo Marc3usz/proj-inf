@@ -31,6 +31,7 @@ JWT_SECRET=<strong secret>
 IP_HASH_SALT=<strong salt>
 PUBLIC_SHORT_URL_BASE=https://<api-service-or-short-domain>
 APP_BASE_URL=https://<web-service-domain>
+CORS_ORIGIN=https://<web-service-domain>
 ```
 
 Set these on the Worker service:
@@ -57,6 +58,12 @@ Set these on the Web service:
 
 ```env
 PUBLIC_API_BASE_URL=https://<api-service-domain>
+```
+
+`CORS_ORIGIN` on the API service should be the exact deployed web origin, for example:
+
+```env
+CORS_ORIGIN=https://web-production-8d072.up.railway.app
 ```
 
 For short links, the important value is `PUBLIC_SHORT_URL_BASE` on the API service. It must be the API service origin only, without `/api` at the end.

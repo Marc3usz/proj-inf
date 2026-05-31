@@ -41,7 +41,6 @@ declare module '$env/static/private' {
 	export const AGENT: string;
 	export const ALLUSERSPROFILE: string;
 	export const APPDATA: string;
-	export const BASE_URL: string;
 	export const bun: string;
 	export const ChocolateyInstall: string;
 	export const CHROME_CRASHPAD_PIPE_NAME: string;
@@ -54,7 +53,6 @@ declare module '$env/static/private' {
 	export const COPILOT_DEBUG_NONCE: string;
 	export const COREPACK_ENABLE_DOWNLOAD_PROMPT: string;
 	export const COREPACK_ROOT: string;
-	export const DEV: string;
 	export const DriverData: string;
 	export const EFC_8600_1592913036: string;
 	export const EFC_8600_4126798990: string;
@@ -69,9 +67,7 @@ declare module '$env/static/private' {
 	export const LANG: string;
 	export const LOCALAPPDATA: string;
 	export const LOGONSERVER: string;
-	export const MODE: string;
 	export const NODE: string;
-	export const NODE_ENV: string;
 	export const NODE_PATH: string;
 	export const npm_command: string;
 	export const npm_config_frozen_lockfile: string;
@@ -120,7 +116,6 @@ declare module '$env/static/private' {
 	export const PROCESSOR_IDENTIFIER: string;
 	export const PROCESSOR_LEVEL: string;
 	export const PROCESSOR_REVISION: string;
-	export const PROD: string;
 	export const ProgramData: string;
 	export const ProgramFiles: string;
 	export const ProgramW6432: string;
@@ -134,14 +129,12 @@ declare module '$env/static/private' {
 	export const TEMP: string;
 	export const TERM_PROGRAM: string;
 	export const TERM_PROGRAM_VERSION: string;
-	export const TEST: string;
 	export const TMP: string;
 	export const USERDOMAIN: string;
 	export const USERDOMAIN_ROAMINGPROFILE: string;
 	export const USERNAME: string;
 	export const USERPROFILE: string;
 	export const VBOX_MSI_INSTALL_PATH: string;
-	export const VITEST: string;
 	export const VSCODE_GIT_ASKPASS_EXTRA_ARGS: string;
 	export const VSCODE_GIT_ASKPASS_MAIN: string;
 	export const VSCODE_GIT_ASKPASS_NODE: string;
@@ -238,7 +231,6 @@ declare module '$env/dynamic/private' {
 		AGENT: string;
 		ALLUSERSPROFILE: string;
 		APPDATA: string;
-		BASE_URL: string;
 		bun: string;
 		ChocolateyInstall: string;
 		CHROME_CRASHPAD_PIPE_NAME: string;
@@ -251,7 +243,6 @@ declare module '$env/dynamic/private' {
 		COPILOT_DEBUG_NONCE: string;
 		COREPACK_ENABLE_DOWNLOAD_PROMPT: string;
 		COREPACK_ROOT: string;
-		DEV: string;
 		DriverData: string;
 		EFC_8600_1592913036: string;
 		EFC_8600_4126798990: string;
@@ -266,9 +257,7 @@ declare module '$env/dynamic/private' {
 		LANG: string;
 		LOCALAPPDATA: string;
 		LOGONSERVER: string;
-		MODE: string;
 		NODE: string;
-		NODE_ENV: string;
 		NODE_PATH: string;
 		npm_command: string;
 		npm_config_frozen_lockfile: string;
@@ -317,7 +306,6 @@ declare module '$env/dynamic/private' {
 		PROCESSOR_IDENTIFIER: string;
 		PROCESSOR_LEVEL: string;
 		PROCESSOR_REVISION: string;
-		PROD: string;
 		ProgramData: string;
 		ProgramFiles: string;
 		ProgramW6432: string;
@@ -331,14 +319,12 @@ declare module '$env/dynamic/private' {
 		TEMP: string;
 		TERM_PROGRAM: string;
 		TERM_PROGRAM_VERSION: string;
-		TEST: string;
 		TMP: string;
 		USERDOMAIN: string;
 		USERDOMAIN_ROAMINGPROFILE: string;
 		USERNAME: string;
 		USERPROFILE: string;
 		VBOX_MSI_INSTALL_PATH: string;
-		VITEST: string;
 		VSCODE_GIT_ASKPASS_EXTRA_ARGS: string;
 		VSCODE_GIT_ASKPASS_MAIN: string;
 		VSCODE_GIT_ASKPASS_NODE: string;

@@ -18,10 +18,18 @@ type Role = JwtUser['role'];
 const app = Fastify({ logger: true, trustProxy: true });
 
 app.addHook('onRequest', async (request, reply) => {
-  reply.header('Access-Control-Allow-Origin', '*');
-  reply.header('Access-Control-Allow-Headers', 'Authorization, Content-Type');
-  reply.header('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS');
+  setCorsHeaders(request, reply);
   if (request.method === 'OPTIONS') return reply.status(204).send();
+});
+
+app.options('/*', async (request, reply) => {
+  setCorsHeaders(request, reply);
+  return reply.status(204).send();
+});
+
+app.options('*', async (request, reply) => {
+  setCorsHeaders(request, reply);
+  return reply.status(204).send();
 });
 
 app.setErrorHandler((error, _request, reply) => {
@@ -463,6 +471,15 @@ function emptyTemplate(overrides: Partial<NotificationSendPayload['template_data
 function notFound(reply: FastifyReply, message: string) { return reply.status(404).send({ code: 'NOT_FOUND', message }); }
 function redirect404(reply: FastifyReply) { return reply.status(404).type('text/plain; charset=utf-8').send('Link not found'); }
 function headerString(value: string | string[] | undefined) { return Array.isArray(value) ? value[0] : value; }
+
+function setCorsHeaders(request: FastifyRequest, reply: FastifyReply) {
+  const origin = request.headers.origin;
+  reply.header('Access-Control-Allow-Origin', origin ?? '*');
+  reply.header('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+  reply.header('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS');
+  reply.header('Access-Control-Max-Age', '86400');
+  reply.header('Vary', 'Origin');
+}
 
 function publicShortUrlBase(request?: FastifyRequest) {
   if (shortUrlBase && !isLocalhostUrl(shortUrlBase)) return shortUrlBase.replace(/\/$/, '');
