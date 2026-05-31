@@ -44,6 +44,8 @@ app.setErrorHandler((error, request, reply) => {
   return reply.status(500).send({ code: 'INTERNAL_ERROR', message: 'Internal server error' });
 });
 
+app.get('/healthz', async () => ({ status: 'ok' }));
+
 app.post('/auth/login', async (request, reply) => {
   const body = z.object({ email: z.string().email(), password: z.string() }).parse(request.body);
   const user = await prisma.user.findFirst({ where: { email: body.email, deletedAt: null, isActive: true } });

@@ -22,4 +22,4 @@ COPY --from=build /app/packages/shared/package.json packages/shared/package.json
 COPY --from=build /app/prisma prisma
 COPY --from=build /app/package.json package.json
 COPY package.json pnpm-workspace.yaml ./
-CMD ["sh", "-c", "until npx prisma migrate deploy; do echo 'waiting for postgres'; sleep 2; done && npx tsx prisma/seed.ts && node apps/api/dist/server.js"]
+CMD ["sh", "-c", "(until npx prisma migrate deploy; do echo 'waiting for postgres'; sleep 2; done && npx tsx prisma/seed.ts) & node apps/api/dist/server.js"]
