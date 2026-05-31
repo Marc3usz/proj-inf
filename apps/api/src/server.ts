@@ -22,16 +22,6 @@ app.addHook('onRequest', async (request, reply) => {
   if (request.method === 'OPTIONS') return reply.status(204).send();
 });
 
-app.options('/*', async (request, reply) => {
-  setCorsHeaders(request, reply);
-  return reply.status(204).send();
-});
-
-app.options('*', async (request, reply) => {
-  setCorsHeaders(request, reply);
-  return reply.status(204).send();
-});
-
 app.setErrorHandler((error, _request, reply) => {
   app.log.error(error);
   if (error instanceof z.ZodError) return reply.status(400).send({ code: 'VALIDATION_ERROR', message: error.errors[0]?.message ?? 'Validation error' });
