@@ -27,6 +27,11 @@ app.addHook('onSend', async (request, reply, payload) => {
   return payload;
 });
 
+app.options('*', async (request, reply) => {
+  setCorsHeaders(request, reply);
+  return reply.status(204).send();
+});
+
 app.setNotFoundHandler((request, reply) => {
   setCorsHeaders(request, reply);
   return reply.status(404).send({ code: 'NOT_FOUND', message: 'Not found' });
