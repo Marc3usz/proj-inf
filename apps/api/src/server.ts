@@ -10,12 +10,12 @@ const prisma = new PrismaClient();
 const redis = new Redis(process.env.REDIS_URL ?? 'redis://localhost:6379', { lazyConnect: true, maxRetriesPerRequest: 1 });
 const publisher = new EventPublisher(process.env.RABBITMQ_URL ?? 'amqp://trackflow:trackflow@localhost:5672', prisma);
 const jwtSecret = process.env.JWT_SECRET ?? 'change-me-in-prod';
-const shortUrlBase = process.env.PUBLIC_SHORT_URL_BASE ?? 'http://localhost:3000';
+const shortUrlBase = process.env.PUBLIC_SHORT_URL_BASE;
 
 type RequestWithUser = FastifyRequest & { user?: JwtUser };
 type Role = JwtUser['role'];
 
-const app = Fastify({ logger: true });
+const app = Fastify({ logger: true, trustProxy: true });
 
 app.addHook('onRequest', async (request, reply) => {
   reply.header('Access-Control-Allow-Origin', '*');
@@ -145,7 +145,7 @@ app.post('/api/links', { preHandler: auth(['agency_admin', 'marketer']) }, async
   if (!(await ensureCampaign(user, body.campaign_id, body.client_id))) return notFound(reply, 'Campaign not found');
   const shortCode = await uniqueShortCode();
   const link = await prisma.link.create({ data: { agencyId: user.agency_id, clientId: body.client_id, campaignId: body.campaign_id, shortCode, originalUrl: body.original_url, expiresAt, status: body.status, createdBy: user.id } });
-  return reply.status(201).send(mapLink(link));
+  return reply.status(201).send(mapLink(link, request));
 });
 app.get('/api/links/:id', { preHandler: auth(['agency_admin', 'marketer', 'client']) }, async (request, reply) => getOwnedLink(request, reply));
 app.patch('/api/links/:id', { preHandler: auth(['agency_admin', 'marketer']) }, async (request, reply) => {
@@ -158,7 +158,7 @@ app.patch('/api/links/:id', { preHandler: auth(['agency_admin', 'marketer']) }, 
   if (expiresAt.getTime() > existing.createdAt.getTime() + 365 * 24 * 60 * 60 * 1000) return reply.status(400).send({ code: 'VALIDATION_ERROR', message: 'expires_at must be <= created_at + 365 days' });
   const link = await prisma.link.update({ where: { id }, data: { originalUrl: body.original_url, expiresAt, status: body.status } });
   await redis.del(`redirect:${existing.shortCode}`).catch(() => null);
-  return mapLink(link);
+  return mapLink(link, request);
 });
 app.delete('/api/links/:id', { preHandler: auth(['agency_admin', 'marketer']) }, async (request, reply) => {
   const user = (request as RequestWithUser).user!;
@@ -329,7 +329,7 @@ async function listLinks(request: FastifyRequest) {
   const q = z.object({ client_id: z.string().optional(), campaign_id: z.string().optional(), status: z.string().optional(), search: z.string().optional() }).passthrough().parse(request.query);
   const where = { agencyId: user.agency_id, deletedAt: null, ...(user.role === 'client' ? { clientId: user.client_id! } : q.client_id ? { clientId: q.client_id } : {}), ...(q.campaign_id ? { campaignId: q.campaign_id } : {}), ...(q.status ? { status: q.status } : {}), ...(q.search ? { shortCode: { contains: q.search } } : {}) };
   const [data, total] = await Promise.all([prisma.link.findMany({ where, skip, take: limit, orderBy: { createdAt: 'desc' } }), prisma.link.count({ where })]);
-  return { data: data.map(mapLink), total, page, limit };
+  return { data: data.map((link) => mapLink(link, request)), total, page, limit };
 }
 
 async function getOwnedClient(request: FastifyRequest, reply: FastifyReply) {
@@ -347,7 +347,7 @@ async function getOwnedCampaign(request: FastifyRequest, reply: FastifyReply) {
 
 async function getOwnedLink(request: FastifyRequest, reply: FastifyReply) {
   const link = await getAuthorizedLink(request, reply);
-  return link ? mapLink(link) : undefined;
+  return link ? mapLink(link, request) : undefined;
 }
 
 async function getAuthorizedCampaign(request: FastifyRequest, reply: FastifyReply) {
@@ -457,12 +457,29 @@ function bucket(dates: Date[], period: 'hour' | 'day' | 'week') {
 
 const userSelect = { id: true, agencyId: true, clientId: true, email: true, role: true, name: true, isActive: true, createdAt: true };
 function mapUser(user: any) { return { id: user.id, agency_id: user.agencyId, client_id: user.clientId, email: user.email, role: user.role, name: user.name, is_active: user.isActive, created_at: user.createdAt }; }
-function mapLink(link: any) { return { id: link.id, agency_id: link.agencyId, client_id: link.clientId, campaign_id: link.campaignId, short_code: link.shortCode, short_url: `${shortUrlBase}/${link.shortCode}`, original_url: link.originalUrl, status: link.status, expires_at: link.expiresAt, last_clicked_at: link.lastClickedAt, created_by: link.createdBy, created_at: link.createdAt }; }
+function mapLink(link: any, request?: FastifyRequest) { return { id: link.id, agency_id: link.agencyId, client_id: link.clientId, campaign_id: link.campaignId, short_code: link.shortCode, short_url: `${publicShortUrlBase(request)}/${link.shortCode}`, original_url: link.originalUrl, status: link.status, expires_at: link.expiresAt, last_clicked_at: link.lastClickedAt, created_by: link.createdBy, created_at: link.createdAt }; }
 function mapReport(report: any) { return { id: report.id, agency_id: report.agencyId, client_id: report.clientId, type: report.type, status: report.status, download_url: report.status === 'done' ? `/api/reports/${report.id}/download` : null, error_message: report.errorMessage, date_from: report.dateFrom, date_to: report.dateTo, created_at: report.createdAt, completed_at: report.completedAt }; }
 function emptyTemplate(overrides: Partial<NotificationSendPayload['template_data']> = {}) { return { report_id: null, link_id: null, short_code: null, client_name: null, campaign_name: null, requesting_user_email: null, download_url: null, ...overrides }; }
 function notFound(reply: FastifyReply, message: string) { return reply.status(404).send({ code: 'NOT_FOUND', message }); }
 function redirect404(reply: FastifyReply) { return reply.status(404).type('text/plain; charset=utf-8').send('Link not found'); }
 function headerString(value: string | string[] | undefined) { return Array.isArray(value) ? value[0] : value; }
+
+function publicShortUrlBase(request?: FastifyRequest) {
+  if (shortUrlBase && !isLocalhostUrl(shortUrlBase)) return shortUrlBase.replace(/\/$/, '');
+  const host = headerString(request?.headers['x-forwarded-host']) ?? request?.headers.host;
+  if (!host) return (shortUrlBase ?? 'http://localhost:3000').replace(/\/$/, '');
+  const proto = headerString(request?.headers['x-forwarded-proto']) ?? request?.protocol ?? 'https';
+  return `${proto}://${host}`.replace(/\/$/, '');
+}
+
+function isLocalhostUrl(value: string) {
+  try {
+    const hostname = new URL(value).hostname;
+    return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0';
+  } catch {
+    return false;
+  }
+}
 
 const port = Number(process.env.PORT ?? 3000);
 app.listen({ port, host: '0.0.0.0' }).catch((error) => { app.log.error(error); process.exit(1); });

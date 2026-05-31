@@ -59,4 +59,20 @@ Set these on the Web service:
 PUBLIC_API_BASE_URL=https://<api-service-domain>
 ```
 
-For short links, the important value is `PUBLIC_SHORT_URL_BASE` on the API service. If it is missing, generated short URLs fall back to `http://localhost:3000`.
+For short links, the important value is `PUBLIC_SHORT_URL_BASE` on the API service. It must be the API service origin only, without `/api` at the end.
+
+Correct:
+
+```env
+PUBLIC_SHORT_URL_BASE=https://trackflow-api.up.railway.app
+```
+
+Incorrect:
+
+```env
+PUBLIC_SHORT_URL_BASE=https://trackflow-api.up.railway.app/api
+```
+
+Redirects live at the root of the API service, so the working URL format is `https://trackflow-api.up.railway.app/1X2-d4F`, not `https://trackflow-api.up.railway.app/api/1X2-d4F`.
+
+If `PUBLIC_SHORT_URL_BASE` is missing or still set to localhost, the API now falls back to the incoming Railway request host so generated links still use the deployed API domain.
